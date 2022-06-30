@@ -1,0 +1,148 @@
+
+
+<!doctype html>
+<html>
+<head>
+    <title>Group 10 - Spark MLlib Project</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+
+<body>
+
+	<header class="fixed">
+		<nav class="navbar navbar-expand-lg topbar shadow mb-1 static-top d-flex bg-light"
+			 style="font-family: 'Times New Roman', Times, serif; padding: 5px;">
+
+			<a href="/" class="mr-auto logo" style="padding-left: 20px;">
+				<h2 style="margin-bottom: -10px;">
+					<u>
+						<img src="/cloud.png" alt="cloud" width="40" height="50" style="padding-bottom: 8px;"/>
+						Group 10
+					</u>
+				</h2>
+			</a>
+		</nav>
+	</header>
+
+
+	<div class="container p-1 border shadow mb-1">
+		<h5 class="text-center"><u>Sentiment Analysis</u>
+            <img src="sentiment.png" class="shadow m-1" alt="sentiment" width="50%"/>
+		</h5>
+		<hr/>
+		<div class="form-group">
+            <label for="text" style="color: darkred;"><h5><u>Type Your Statements Here:</u></h5></label>
+			<textarea class="form-control" rows="5" id="text" ></textarea>
+			<br/>
+			<button id="analysis" class="btn btn-success"> Click Here For Sentiment Analysis </button>
+		</div>
+		<br/>
+		<h5 style="color: darkred;"><u>Analysis Result:</u></h5>
+
+
+		<div class="form-group" style="margin-left: 20px;">
+
+			<p style="color: darkgreen;" class="row">
+				<span class="col-1 col-sm-2 p-1 border" style="margin-top: auto; margin-bottom: auto; text-align: center;"><strong>Sentiment</strong></span>
+				<span class="col-10 col-sm-9 p-1 border"><strong>Statement</strong></span>
+			</p>
+
+			<p style="color: darkblue;" id="loading" style="position: fixed; margin: 0px 0px 0px 300px;">
+				<img src="pleasewait.gif" alt="Loading..." width="400px"/>
+			</p>
+
+			<div id="result">
+				<p style="color: darkblue; margin-bottom: 5px;" class="row">
+					<span class="col-1 col-sm-2" style="text-align: center;"><img src="positive.png"/></span>
+					<span class="col-10 col-sm-9 bg-light p-1 border">Positive Statement</span>
+				</p>
+				<p style="color: darkblue; margin-bottom: 5px;" class="row">
+					<span class="col-1 col-sm-2" style="text-align: center;"><img src="neutral.png"/></span>
+					<span class="col-10 col-sm-9 bg-light p-1 border">Neural Statement</span>
+				</p>
+				<p style="color: darkblue; margin-bottom: 5px;" class="row">
+					<span class="col-1 col-sm-2" style="text-align: center;"><img src="negative.png"/></span>
+					<span class="col-10 col-sm-9  bg-light p-1 border">Negative Statement</span>
+				</p>
+			</div>
+
+		</div>
+
+	</div>
+	<br/>
+	<br/>
+
+	<script>
+
+		var rownum = 1;
+		$('#loading').hide();
+
+		document.getElementById("analysis").onclick = function () {
+            $('#loading').show();
+            $('#result').hide();
+
+            with (new XMLHttpRequest()) {
+                console.log("-->> Upload Text.");
+                open('POST', '/upload?type=data&text=' + encodeURI(document.getElementById('text').value), true);
+                responseType = 'text';
+                send();
+            }
+
+            function loadResult() {
+                var xmlHttp = new XMLHttpRequest();
+                xmlHttp.open("GET", '/result', false);
+                xmlHttp.send(null);
+                if (xmlHttp.status === 200)
+                    tbl(xmlHttp.responseText);
+
+                rownum = rownum + 1;
+                if (rownum > 100)
+                    clearInterval(loadResult);
+
+                console.log("-->> [" + rownum + "] Lookup...");
+
+            }
+
+            var loadResult = setInterval(loadResult, 5000);
+
+            function tbl(csv) {
+                var lines = csv.split('\n');
+                console.log("-->> [" + rownum + "] Result: " + lines);
+
+                var resultRow = $('<span></span>');
+                for (var i = 0; i < lines.length; i++) {
+                    var xline = lines[i].split('\t');
+                    console.log('-->> [" + rownum + "] XLine: ' + xline[1] + " | " + xline[0])
+
+                    if (xline[1] != undefined) {
+                        var row = $('<p style="color: darkblue;" class="row"></p>');
+
+                        if (xline[1] === 'positive')
+                            row.append($('<span class="col-1 col-sm-2" style="margin-top: auto; margin-bottom: auto; text-align: center;"><img src="positive.png"/></span>'));
+                        else if (xline[1] === 'negative')
+                            row.append($('<span class="col-1 col-sm-2" style="margin-top: auto; margin-bottom: auto; text-align: center;"><img src="negative.png"/></span>'));
+                        else if (xline[1] === 'neutral')
+                            row.append($('<span class="col-1 col-sm-2" style="margin-top: auto; margin-bottom: auto; text-align: center;"><img src="neutral.png"/></span>'));
+
+                        row.append($('<span class="col-10 col-sm-9 bg-light p-1 border">' + xline[0] + '</span>'));
+                        resultRow.append(row);
+                    }
+                }
+
+                $('#result').empty();
+                $('#result').append(resultRow);
+
+                $('#loading').hide();
+                $('#result').show();
+            }
+        }
+
+    </script>
+
+
+</body>
+
+
+</html>
+
